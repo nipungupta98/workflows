@@ -53,11 +53,18 @@ response.raise_for_status()
 
 data = response.json()
 
-html_content = ""
+html_content = None
 
-for block in data["content"]:
-    if block["type"] == "text":
-        html_content += block["text"]
+for block in reversed(data["content"]):
+    if (
+        block.get("type") == "text"
+        and "<!DOCTYPE html>" in block.get("text", "")
+    ):
+        html_content = block["text"]
+        break
+
+if html_content is None:
+    raise Exception("No HTML document found in Claude response")
 
 with open("briefing.html", "w", encoding="utf-8") as f:
     f.write(html_content)
